@@ -23,11 +23,11 @@ flipraro = flip flip
 
 -- 2)
 
-curry :: ((a, b) -> c) -> a -> b -> c
-curry f = \x y -> f (x, y)
+_curry :: ((a, b) -> c) -> a -> b -> c
+_curry f = \x y -> f (x, y)
 
-uncurry :: (a -> b -> c) -> (a,b) -> c
-uncurry f = \(x, y) -> f x y
+_uncurry :: (a -> b -> c) -> (a,b) -> c
+_uncurry f = \(x, y) -> f x y
 
 -- curryN no es posible, deberiamos poder decir: :: (a,b,...,) -> ... con infinitos argumentos
 
@@ -41,10 +41,6 @@ maximo (x:xs)
     where rec = maximo xs
 
 -- 3)
-
-_foldr :: (a -> b -> b) -> b -> [a] -> b
-_foldr _ z [] = z
-_foldr f z (x:xs) = f x (foldr f z xs) 
 
 _sum :: Num a => [a] -> a
 _sum x = foldr f 0 x
@@ -91,3 +87,29 @@ entrelazar1 (x:xs) = \ys -> if null ys
 
 entrelazar2 :: [a] -> ([a] -> [a])
 entrelazar2 = foldr (\x rec -> \ys -> if null ys then x : rec [] else x : head ys : rec (tail ys)) id
+
+_foldr :: (a -> b -> b) -> b -> [a] -> b
+_foldr _ z [] = z
+_foldr f z (x:xs) = f x (foldr f z xs) 
+
+recr :: (a -> [a] -> b -> b) -> b -> [a] -> b
+recr _ z [] = z
+recr f z (x:xs) = f x xs (recr f z xs)
+
+sacarUna :: Eq a => a -> [a] -> [a]
+sacarUna e l = recr combiner [] l
+    where combiner = \x xs rec -> if x == e then xs else x : rec
+
+
+insertarOrdenado :: Ord a => a -> [a] -> [a]
+insertarOrdenado e l = recr combiner [] l
+    where combiner = \x xs rec -> if x >= e then e : x : xs else x : rec
+
+mapPares :: (a -> b -> c) -> [(a,b)] -> [c]
+mapPares f = map (uncurry f)
+
+armarPares :: [a] -> [b] -> [(a,b)]
+armarPares = foldr combiner (const [])
+    where combiner = \x rec ys -> if null ys then [] else (x, (head ys)) : rec (tail ys)
+
+-- que onda esta funcion, currificacion y evaluacion parcial
